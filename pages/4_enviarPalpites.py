@@ -4,6 +4,8 @@ from utils.visual import aplicar_visual
 from config.usuarios import USUARIOS
 from services.api_copa import (buscar_jogos_rodada,buscar_rodada_aberta)
 from utils.visual import (aplicar_visual,exibir_rodape_sidebar)
+import os
+
 
 # ==========================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -322,6 +324,13 @@ else:
             except FileNotFoundError:
 
                 df_final = df_envio
+
+            os.makedirs(
+
+                os.path.dirname(arquivo_palpites),
+                exist_ok=True
+                
+            )
 
             df_final.to_excel(
                 arquivo_palpites,

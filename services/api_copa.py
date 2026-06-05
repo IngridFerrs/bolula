@@ -1,8 +1,9 @@
 import requests
 import pandas as pd
 from datetime import datetime,timedelta,timezone
+import streamlit as st
 
-API_KEY = "6c4d31443b4d4348a2e53a6c48f786f6"
+API_KEY = st.secrets["API_KEY"]
 
 COMPETICAO = "WC"
 

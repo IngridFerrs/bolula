@@ -1,0 +1,21 @@
+[project]
+name = "bolula"
+version = "0.1.0"
+description = "Sistema do bolão BOLULA"
+authors = [
+    {name = "ingrid"}
+]
+requires-python = ">=3.12"
+
+dependencies = [
+    "requests",
+    "pandas",
+    "openpyxl",
+    "streamlit (>=1.57.0,<2.0.0)",
+    "image (>=1.5.33,<2.0.0)",
+    "plotly (>=6.7.0,<7.0.0)"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

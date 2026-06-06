@@ -22,6 +22,9 @@ st.set_page_config(
 
 aplicar_visual()
 exibir_rodape_sidebar()
+
+LIBERAR_PALPITES = True
+
 st.title("📊 Palpites dos Participantes")
 
 st.divider()
@@ -224,6 +227,14 @@ if opcao_rodada != "Todas":
 # ==========================================
 # TABELA DE EXIBIÇÃO
 # ==========================================
+
+if not LIBERAR_PALPITES:
+
+    st.warning(
+        "Os palpites ainda estão ocultos. Eles serão liberados após o início da rodada."
+    )
+
+    st.stop()
 
 if tem_resultado:
 

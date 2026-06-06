@@ -1,8 +1,8 @@
-import glob
 import pandas as pd
 import streamlit as st
 from utils.visual import aplicar_visual
 from utils.visual import (aplicar_visual,exibir_rodape_sidebar)
+from services.google_sheets import ler_resultados
 
 # ==========================================
 # CONFIGURAÇÃO
@@ -89,35 +89,26 @@ def bandeira_img(time):
 # LER RESULTADOS
 # ==========================================
 
-arquivos = glob.glob(
-    "dados/resultados_rodada_*.xlsx"
-)
+jogos = ler_resultados()
 
-if not arquivos:
+if jogos.empty:
 
     st.warning(
         "Nenhum jogo encontrado até o momento."
     )
 
     st.stop()
+jogos["rodada"] = jogos["rodada"].astype(int)
 
-lista = []
-
-for arquivo in arquivos:
-
-    df = pd.read_excel(
-        arquivo
-    )
-
-    lista.append(
-        df
-    )
-
-jogos = pd.concat(
-    lista,
-    ignore_index=True
+jogos["gols_casa"] = pd.to_numeric(
+    jogos["gols_casa"],
+    errors="coerce"
 )
 
+jogos["gols_fora"] = pd.to_numeric(
+    jogos["gols_fora"],
+    errors="coerce"
+)
 # ==========================================
 # FILTRO DE RODADA
 # ==========================================

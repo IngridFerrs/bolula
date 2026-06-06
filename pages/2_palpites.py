@@ -181,39 +181,46 @@ if opcao_participante != "Todos":
 # MANTER COMENTADO DURANTE OS TESTES
 # Quando for para produção, descomente este bloco.
 
-# if opcao_rodada != "Todas":
-#
-#     if not rodada_ja_comecou(opcao_rodada):
-#
-#         st.warning(
-#             "Os palpites desta rodada ainda não estão disponíveis. Eles serão liberados após o início do primeiro jogo da rodada."
-#         )
-#
-#         st.stop()
-#
-# else:
-#
-#     rodadas_liberadas = [
-#
-#         rodada
-#         for rodada in rodadas
-#         if rodada_ja_comecou(rodada)
-#
-#     ]
-#
-#     if not rodadas_liberadas:
-#
-#         st.warning(
-#             "Nenhuma rodada teve início ainda. Os palpites permanecem ocultos."
-#         )
-#
-#         st.stop()
-#
-#     df_filtrado = df_filtrado[
-#         df_filtrado["Rodada"].isin(rodadas_liberadas)
-#     ]
+if opcao_rodada != "Todas":
 
+    if not rodada_ja_comecou(opcao_rodada):
 
+        st.warning(
+            "Os palpites desta rodada ainda não estão disponíveis. Eles serão liberados após o início do primeiro jogo da rodada."
+        )
+
+        st.stop()
+
+else:
+
+    rodadas_liberadas = [
+
+        rodada
+        for rodada in rodadas
+        if rodada_ja_comecou(rodada)
+
+    ]
+
+    if not rodadas_liberadas:
+
+        st.warning(
+            "Nenhuma rodada teve início ainda. Os palpites permanecem ocultos."
+        )
+
+        st.stop()
+
+    df_filtrado = df_filtrado[
+        df_filtrado["Rodada"].isin(rodadas_liberadas)
+    ]
+
+st.write("DEBUG rodada:", opcao_rodada)
+
+if opcao_rodada != "Todas":
+
+    st.write(
+        "DEBUG rodada já começou?",
+        rodada_ja_comecou(opcao_rodada)
+    )
 # ==========================================
 # TABELA DE EXIBIÇÃO
 # ==========================================

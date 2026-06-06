@@ -1,5 +1,15 @@
+import sys
+from pathlib import Path
+
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+
 import requests
 import pandas as pd
+
+from services.google_sheets import salvar_resultados
+
 
 # ==========================================
 # CONFIGURAÇÕES
@@ -164,9 +174,8 @@ print(df)
 # EXPORTAR EXCEL
 # ==========================================
 
-df.to_excel(
-    f"dados/resultados_rodada_{RODADA}.xlsx",
-    index=False
+salvar_resultados(
+    df
 )
 
-print("\nARQUIVO EXPORTADO COM SUCESSO!")
+print("\nRESULTADOS SALVOS NO GOOGLE SHEETS COM SUCESSO!")

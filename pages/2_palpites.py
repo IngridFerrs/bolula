@@ -5,8 +5,7 @@ import pandas as pd
 import streamlit as st
 from services.api_copa import rodada_ja_comecou
 from utils.visual import (aplicar_visual,exibir_rodape_sidebar)
-
-
+from services.google_sheets import ler_palpites
 
 # ==========================================
 # CONFIGURAÇÃO
@@ -105,34 +104,15 @@ else:
         "Ainda não há pontuação calculada. Exibindo apenas os palpites enviados."
     )
 
-    arquivos = glob.glob(
-        "dados/palpites_rodada_*.xlsx"
-    )
+    palpites = ler_palpites()
 
-    if not arquivos:
+    if palpites.empty:
 
         st.warning(
             "Nenhum palpite enviado até o momento."
         )
 
         st.stop()
-
-    lista = []
-
-    for arquivo in arquivos:
-
-        df = pd.read_excel(
-            arquivo
-        )
-
-        lista.append(
-            df
-        )
-
-    palpites = pd.concat(
-        lista,
-        ignore_index=True
-    )
 
     palpites["Palpite"] = (
         palpites["palpite_a"].astype(str)

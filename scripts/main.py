@@ -1,48 +1,45 @@
 import pandas as pd
+import sys
+from pathlib import Path
 import glob
+
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+from services.google_sheets import (ler_palpites,ler_resultados,salvar_classificacao,salvar_extrato)
 
 # Leitura de Arquivos
 
 #LOCALIZAR ARQUIVO DE PALPITES 
 
-arquivos_palpites = glob.glob("dados/palpites_rodada_*.xlsx")
+# ==========================================
+# LER PALPITES DO GOOGLE SHEETS
+# ==========================================
 
-print("\nARQUIVOS DE PALPITES:\n")
+palpites = ler_palpites()
 
-#VALIDAR
+if palpites.empty:
 
-if not arquivos_palpites:
-    print("\nERRO : nenhum arquivo de palpite encontrado")
+    print("\nERRO: nenhum palpite encontrado.")
     exit()
-lista_palpites = []
 
-for arquivo in arquivos_palpites:
-
-    df = pd.read_excel(arquivo)
-    lista_palpites.append(df)
-palpites = pd.concat(lista_palpites,ignore_index=True)
+print("\nPALPITES:\n")
 print(palpites.head())
 
 
-arquivos_resultados = glob.glob("dados/resultados_rodada_*.xlsx")
+# ==========================================
+# LER RESULTADOS DO GOOGLE SHEETS
+# ==========================================
 
-print(arquivos_resultados)
+resultados = ler_resultados()
 
-print("\nARQUIVOS ENCONTRADOS\n")
-print(arquivos_resultados)
+if resultados.empty:
 
-#Lista de DATAFRAMES
-lista_resultados = []
+    print("\nERRO: nenhum resultado encontrado.")
+    exit()
 
-
-#LER CADA ARQUIVO
-
-for arquivo in arquivos_resultados:
-    df = pd.read_excel(arquivo)
-
-    lista_resultados.append(df)
-
-resultados = pd.concat(lista_resultados,ignore_index=True)
+print("\nRESULTADOS:\n")
+print(resultados.head())
 
 resultados = resultados.rename(
     columns={
@@ -51,6 +48,28 @@ resultados = resultados.rename(
         "time_casa": "time_a",
         "time_fora": "time_b"
     }
+)
+
+# ==========================================
+# AJUSTAR TIPOS
+# ==========================================
+
+palpites["rodada"] = palpites["rodada"].astype(int)
+palpites["jogo_id"] = palpites["jogo_id"].astype(int)
+palpites["palpite_a"] = palpites["palpite_a"].astype(int)
+palpites["palpite_b"] = palpites["palpite_b"].astype(int)
+
+resultados["rodada"] = resultados["rodada"].astype(int)
+resultados["jogo_id"] = resultados["jogo_id"].astype(int)
+
+resultados["gols_a_real"] = pd.to_numeric(
+    resultados["gols_a_real"],
+    errors="coerce"
+)
+
+resultados["gols_b_real"] = pd.to_numeric(
+    resultados["gols_b_real"],
+    errors="coerce"
 )
 
 print(resultados.head())
@@ -250,26 +269,16 @@ extrato = dados [
 
 #Exportar para Excel
 
-with pd.ExcelWriter(
+# ==========================================
+# SALVAR NO GOOGLE SHEETS
+# ==========================================
 
-    "saidas/resultado_final.xlsx",
-    engine="openpyxl"
-) as writer:
-    
-    #Aba 1
+salvar_classificacao(
+    classificacao
+)
 
-    classificacao.to_excel(
-        writer,
-        sheet_name="CLASSIFICACAO",
-        index=False
-    )
+salvar_extrato(
+    extrato
+)
 
-    #Aba 2
-
-    extrato.to_excel(
-        writer,
-        sheet_name="EXTRATO",
-        index=False
-    )
-
-print("\nARQUIVO EXCEL GERADO COM SUCESSO!")
+print("\nCLASSIFICAÇÃO E EXTRATO SALVOS NO GOOGLE SHEETS COM SUCESSO!")

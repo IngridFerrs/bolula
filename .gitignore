@@ -2,3 +2,9 @@ venv/
 __pycache__/
 *.pyc
 .env
+~$*.xlsx
+.streamlit/secrets.toml
+*.json
+config/usuarios.py
+.streamlit/secrets.toml
+config/google_credentials.json

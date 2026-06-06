@@ -1,8 +1,8 @@
-import os
 from utils.visual import aplicar_visual
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from services.google_sheets import (ler_classificacao,ler_extrato)
 
 
 # ==================================================
@@ -89,35 +89,24 @@ st.markdown(
 # LEITURA DE DADOS
 # ==================================================
 
-CAMINHO_RESULTADO = "saidas/resultado_final.xlsx"
+classificacao = ler_classificacao()
 
-if not os.path.exists(CAMINHO_RESULTADO):
+jogos = ler_extrato()
 
-    st.warning(
-        "Ainda não há classificação disponível."
-    )
-
-    st.stop()
-
-try:
-
-    classificacao = pd.read_excel(
-        CAMINHO_RESULTADO,
-        sheet_name="CLASSIFICACAO"
-    )
-
-    jogos = pd.read_excel(
-        CAMINHO_RESULTADO,
-        sheet_name="EXTRATO"
-    )
-
-except FileNotFoundError:
+if classificacao.empty or jogos.empty:
 
     st.warning(
         "Ainda não há classificação disponível."
     )
 
     st.stop()
+classificacao["posicao"] = classificacao["posicao"].astype(int)
+
+classificacao["pontos"] = classificacao["pontos"].astype(int)
+
+jogos["rodada"] = jogos["rodada"].astype(int)
+
+jogos["pontos"] = jogos["pontos"].astype(int)
 
 
 # ==================================================

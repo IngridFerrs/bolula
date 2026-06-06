@@ -12,6 +12,7 @@ ABA_CLASSIFICACAO = "CLASSIFICACAO"
 
 
 @st.cache_resource
+@st.cache_resource
 def conectar_planilha():
 
     escopos = [
@@ -19,19 +20,10 @@ def conectar_planilha():
         "https://www.googleapis.com/auth/drive"
     ]
 
-    if "gcp_service_account" in st.secrets:
-
-        credenciais = Credentials.from_service_account_info(
-            st.secrets["gcp_service_account"],
-            scopes=escopos
-        )
-
-    else:
-
-        credenciais = Credentials.from_service_account_file(
-            "config/google_credentials.json",
-            scopes=escopos
-        )
+    credenciais = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=escopos
+    )
 
     cliente = gspread.authorize(
         credenciais

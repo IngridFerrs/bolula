@@ -184,33 +184,33 @@ if opcao_participante != "Todos":
 # MANTER COMENTADO DURANTE OS TESTES
 # Quando for para produção, descomente este bloco.
 
-if opcao_rodada != "Todas":
+# if opcao_rodada != "Todas":
 
-    if not rodada_ja_comecou(opcao_rodada):
+#     if not rodada_ja_comecou(opcao_rodada):
 
-        st.warning(
-            "Os palpites desta rodada ainda não estão disponíveis. Eles serão liberados após o início do primeiro jogo da rodada."
-        )
+#         st.warning(
+#             "Os palpites desta rodada ainda não estão disponíveis. Eles serão liberados após o início do primeiro jogo da rodada."
+#         )
 
-        st.stop()
+#         st.stop()
 
-else:
+# else:
 
-    rodadas_liberadas = [
+#     rodadas_liberadas = [
 
-        rodada
-        for rodada in rodadas
-        if rodada_ja_comecou(rodada)
+#         rodada
+#         for rodada in rodadas
+#         if rodada_ja_comecou(rodada)
 
-    ]
+#     ]
 
-    if not rodadas_liberadas:
+#     if not rodadas_liberadas:
 
-        st.warning(
-            "Nenhuma rodada teve início ainda. Os palpites permanecem ocultos."
-        )
+#         st.warning(
+#             "Nenhuma rodada teve início ainda. Os palpites permanecem ocultos."
+#         )
 
-        st.stop()
+#         st.stop()
 
     df_filtrado = df_filtrado[
         df_filtrado["Rodada"].isin(rodadas_liberadas)

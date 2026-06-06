@@ -1,11 +1,14 @@
-import glob
-import os
-from utils.visual import aplicar_visual
 import pandas as pd
 import streamlit as st
 from services.api_copa import rodada_ja_comecou
-from utils.visual import (aplicar_visual,exibir_rodape_sidebar)
-from services.google_sheets import ler_palpites
+from services.google_sheets import (
+    ler_palpites,
+    ler_extrato
+)
+from utils.visual import (
+    aplicar_visual,
+    exibir_rodape_sidebar
+)
 
 # ==========================================
 # CONFIGURAÇÃO
@@ -28,7 +31,7 @@ st.divider()
 # CONFIGURAÇÕES
 # ==========================================
 
-CAMINHO_RESULTADO = "saidas/resultado_final.xlsx"
+
 
 
 # ==========================================
@@ -56,18 +59,11 @@ def colorir_regra(valor):
 # CARREGAR DADOS
 # ==========================================
 
-if os.path.exists(CAMINHO_RESULTADO):
+extrato = ler_extrato()
 
-    # --------------------------------------
-    # CASO 1: JÁ EXISTE CLASSIFICAÇÃO
-    # --------------------------------------
+if not extrato.empty:
 
-    palpites = pd.read_excel(
-        CAMINHO_RESULTADO,
-        sheet_name="EXTRATO"
-    )
-
-    palpites = palpites.rename(
+    palpites = extrato.rename(
         columns={
             "participante": "Participante",
             "rodada": "Rodada",
@@ -92,13 +88,12 @@ if os.path.exists(CAMINHO_RESULTADO):
         .fillna(palpites["Regra"])
     )
 
+    palpites["Rodada"] = palpites["Rodada"].astype(int)
+    palpites["Pontos"] = palpites["Pontos"].astype(int)
+
     tem_resultado = True
 
 else:
-
-    # --------------------------------------
-    # CASO 2: AINDA NÃO EXISTE CLASSIFICAÇÃO
-    # --------------------------------------
 
     st.warning(
         "Ainda não há pontuação calculada. Exibindo apenas os palpites enviados."
@@ -132,6 +127,8 @@ else:
             "rodada": "Rodada"
         }
     )
+
+    palpites["Rodada"] = palpites["Rodada"].astype(int)
 
     tem_resultado = False
 

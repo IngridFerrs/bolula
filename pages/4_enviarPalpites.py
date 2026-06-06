@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 from utils.visual import aplicar_visual
-from config.usuarios import USUARIOS
+USUARIOS = dict(st.secrets["usuarios"])
 from services.api_copa import (buscar_jogos_rodada,buscar_rodada_aberta)
 from utils.visual import (aplicar_visual,exibir_rodape_sidebar)
 import os
+from services.google_sheets import (salvar_palpites,participante_ja_enviou)
 
 
 # ==========================================
@@ -196,29 +197,10 @@ else:
     # VERIFICAR SE JÁ ENVIOU
     # ==========================================
 
-    try:
-
-        df_palpites = pd.read_excel(
-            arquivo_palpites
-        )
-
-        ja_enviou = (
-
-            df_palpites["participante"]
-
-            .astype(str)
-
-            .str.strip()
-
-            .eq(usuario)
-
-            .any()
-
-        )
-
-    except FileNotFoundError:
-
-        ja_enviou = False
+    ja_enviou = participante_ja_enviou(
+    usuario,
+    rodada_aberta
+    )
     # ==========================================
     # BLOQUEAR DUPLICIDADE
     # ==========================================
@@ -310,31 +292,8 @@ else:
                 palpites_usuario
             )
 
-            try:
-
-                df_existente = pd.read_excel(
-                    arquivo_palpites
-                )
-
-                df_final = pd.concat(
-                    [df_existente, df_envio],
-                    ignore_index=True
-                )
-
-            except FileNotFoundError:
-
-                df_final = df_envio
-
-            os.makedirs(
-
-                os.path.dirname(arquivo_palpites),
-                exist_ok=True
-                
-            )
-
-            df_final.to_excel(
-                arquivo_palpites,
-                index=False
+            salvar_palpites(
+                df_envio
             )
 
             st.success(

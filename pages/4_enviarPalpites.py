@@ -154,9 +154,13 @@ else:
     # VERIFICAR PRAZO E ENVIO
     # ==========================================
 
-    ja_enviou = participante_ja_enviou(
+    palpites_existentes = buscar_palpites_participante_rodada(
         usuario,
         rodada_aberta
+    )
+
+    ja_enviou = bool(
+        palpites_existentes
     )
 
     if not ENVIO_ABERTO:
@@ -199,10 +203,7 @@ else:
 
     palpites_usuario = []
 
-    palpites_existentes = buscar_palpites_participante_rodada(
-        usuario,
-        rodada_aberta
-    )
+    
 
     for indice, linha in df_rodada.iterrows():
 

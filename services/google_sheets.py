@@ -12,7 +12,7 @@ ABA_CLASSIFICACAO = "CLASSIFICACAO"
 
 
 @st.cache_resource
-@st.cache_resource
+
 def conectar_planilha():
 
     escopos = [
@@ -46,14 +46,37 @@ def abrir_aba(nome_aba):
 
 def ler_palpites():
 
+    colunas = [
+        "participante",
+        "rodada",
+        "jogo_id",
+        "time_casa",
+        "time_fora",
+        "palpite_a",
+        "palpite_b"
+    ]
+
     aba = abrir_aba(
         ABA_PALPITES
     )
 
-    dados = aba.get_all_records()
+    valores = aba.get_all_values()
+
+    if not valores:
+
+        return pd.DataFrame(
+            columns=colunas
+        )
+
+    if len(valores) == 1:
+
+        return pd.DataFrame(
+            columns=valores[0]
+        )
 
     return pd.DataFrame(
-        dados
+        valores[1:],
+        columns=valores[0]
     )
 
 

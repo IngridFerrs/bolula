@@ -212,18 +212,11 @@ if opcao_participante != "Todos":
 
 #         st.stop()
 
-    df_filtrado = df_filtrado[
-        df_filtrado["Rodada"].isin(rodadas_liberadas)
-    ]
+    
 
-st.write("DEBUG rodada:", opcao_rodada)
 
-if opcao_rodada != "Todas":
 
-    st.write(
-        "DEBUG rodada já começou?",
-        rodada_ja_comecou(opcao_rodada)
-    )
+
 # ==========================================
 # TABELA DE EXIBIÇÃO
 # ==========================================

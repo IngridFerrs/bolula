@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 from utils.visual import aplicar_visual
 USUARIOS = dict(st.secrets["usuarios"])
-from services.api_copa import (buscar_jogos_rodada,buscar_rodada_aberta)
+from services.api_copa import (buscar_jogos_rodada,buscar_rodada_aberta,rodada_ainda_aberta)
 from utils.visual import (aplicar_visual,exibir_rodape_sidebar)
 import os
-from services.google_sheets import (salvar_ou_atualizar_palpites,participante_ja_enviou)
+from services.google_sheets import (salvar_ou_atualizar_palpites,participante_ja_enviou,buscar_palpites_participante_rodada)
 
 
 # ==========================================
@@ -197,96 +197,109 @@ else:
     # VERIFICAR SE JÁ ENVIOU
     # ==========================================
 
-    ja_enviou = participante_ja_enviou(
+ja_enviou = participante_ja_enviou(
     usuario,
     rodada_aberta
+)
+
+prazo_aberto = rodada_ainda_aberta(
+    rodada_aberta
+)
+
+if not prazo_aberto:
+
+    st.warning(
+        "O prazo para envio ou edição dos palpites desta rodada foi encerrado."
     )
-    # ==========================================
-    # BLOQUEAR DUPLICIDADE
-    # ==========================================
 
-    if ja_enviou:
+    st.stop()
 
-        st.warning(
-            "Você já enviou seus palpites para esta rodada."
+# ==========================================
+# AVISO DE ENVIO / EDIÇÃO
+# ==========================================
+
+if ja_enviou:
+
+    st.info(
+        "Você já enviou palpites para esta rodada. Você pode editar e reenviar até 30 minutos antes do primeiro jogo."
+    )
+
+else:
+
+    st.success(
+        "Você ainda não enviou seus palpites."
+    )
+
+st.divider()
+
+st.subheader(
+    "Preencha seus palpites"
+)
+
+palpites_usuario = []
+
+for indice, linha in df_rodada.iterrows():
+
+    st.markdown(
+        f"### {linha['time_casa']} x {linha['time_fora']}"
+    )
+
+    col1, col2, col3 = st.columns(
+        [1, 0.3, 1]
+    )
+
+    with col1:
+
+        gols_casa = st.number_input(
+            linha["time_casa"],
+            min_value=0,
+            max_value=20,
+            value=0,
+            key=f"casa_{indice}"
         )
 
-    else:
+    with col2:
 
-        st.success(
-            "Você ainda não enviou seus palpites."
+        st.markdown(
+            "<h3 style='text-align:center;'>x</h3>",
+            unsafe_allow_html=True
         )
 
-        st.divider()
+    with col3:
 
-        st.subheader(
-            "Preencha seus palpites"
+        gols_fora = st.number_input(
+            linha["time_fora"],
+            min_value=0,
+            max_value=20,
+            value=0,
+            key=f"fora_{indice}"
         )
 
-        palpites_usuario = []
+    palpites_usuario.append({
 
-        for indice, linha in df_rodada.iterrows():
+        "participante": usuario,
 
-            st.markdown(
-                f"### {linha['time_casa']} x {linha['time_fora']}"
-            )
+        "rodada": linha["rodada"],
 
-            col1, col2, col3 = st.columns(
-                [1, 0.3, 1]
-            )
+        "jogo_id": linha["jogo_id"],
 
-            with col1:
+        "time_casa": linha["time_casa"],
 
-                gols_casa = st.number_input(
-                    linha["time_casa"],
-                    min_value=0,
-                    max_value=20,
-                    value=0,
-                    key=f"casa_{indice}"
-                )
+        "time_fora": linha["time_fora"],
 
-            with col2:
+        "palpite_a": gols_casa,
 
-                st.markdown(
-                    "<h3 style='text-align:center;'>x</h3>",
-                    unsafe_allow_html=True
-                )
+        "palpite_b": gols_fora
 
-            with col3:
+    })
 
-                gols_fora = st.number_input(
-                    linha["time_fora"],
-                    min_value=0,
-                    max_value=20,
-                    value=0,
-                    key=f"fora_{indice}"
-                )
-
-            palpites_usuario.append({
-
-                "participante": usuario,
-
-                "rodada": linha["rodada"],
-
-                "jogo_id": linha["jogo_id"],
-
-                "time_casa": linha["time_casa"],
-
-                "time_fora": linha["time_fora"],
-
-                "palpite_a": gols_casa,
-
-                "palpite_b": gols_fora
-
-            })
-
-            st.divider()
+    st.divider()
 
         # ==========================================
         # ENVIAR PALPITES
         # ==========================================
 
-        if st.button("📤 Enviar Palpites"):
+if st.button("📤 Enviar Palpites"):
 
             df_envio = pd.DataFrame(
                 palpites_usuario
@@ -308,9 +321,9 @@ else:
     # LOGOUT
     # ==========================================
 
-    st.divider()
+st.divider()
 
-    if st.button("Sair"):
+if st.button("Sair"):
 
         st.session_state.autenticado = False
 

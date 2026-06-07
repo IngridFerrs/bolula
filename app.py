@@ -37,7 +37,7 @@ pages = {
 
         st.Page(
             "pages/4_enviarPalpites.py",
-            title="📤 Upload"
+            title="📤 Envio Palpites"
         )
 
     ]

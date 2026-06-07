@@ -3,6 +3,7 @@ import plotly.express as px
 import streamlit as st
 from services.google_sheets import (ler_classificacao,ler_extrato)
 from utils.visual import aplicar_visual
+from services.api_copa import buscar_rodada_aberta
 
 # ==================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -13,8 +14,28 @@ st.set_page_config(
     page_icon="🏆",
     layout="wide"
 )
-
 aplicar_visual()
+
+rodada_atual = buscar_rodada_aberta()
+
+st.markdown(
+    "<div style='height: 24px;'></div>",
+    unsafe_allow_html=True
+)
+
+if rodada_atual is None:
+
+    st.status(
+        "🏆 A Copa começa já já!"
+    )
+
+else:
+
+    st.status(
+        f"🏆 Rodada atual: {rodada_atual}"
+    )
+
+
 
 
 # ==================================================

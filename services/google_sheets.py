@@ -369,3 +369,36 @@ def salvar_ou_atualizar_palpites(df_envio, participante, rodada):
     aba.update(
         linhas_finais
     )
+
+def buscar_palpites_participante_rodada(participante, rodada):
+
+    df = ler_palpites()
+
+    if df.empty:
+
+        return {}
+
+    df_filtrado = df[
+        (
+            df["participante"].astype(str).str.strip()
+            == str(participante).strip()
+        )
+        &
+        (
+            df["rodada"].astype(str).str.strip()
+            == str(rodada).strip()
+        )
+    ]
+
+    palpites_existentes = {}
+
+    for _, linha in df_filtrado.iterrows():
+
+        jogo_id = int(linha["jogo_id"])
+
+        palpites_existentes[jogo_id] = {
+            "palpite_a": int(linha["palpite_a"]),
+            "palpite_b": int(linha["palpite_b"])
+        }
+
+    return palpites_existentes

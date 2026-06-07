@@ -206,3 +206,19 @@ def rodada_ja_comecou(rodada):
     agora = datetime.now(timezone.utc)
 
     return agora >= primeiro_jogo
+
+def rodada_ainda_aberta(rodada):
+
+    rodadas = buscar_primeiro_jogo_por_rodada()
+
+    if rodada not in rodadas:
+
+        return False
+
+    agora = datetime.now(timezone.utc)
+
+    primeiro_jogo = rodadas[rodada]
+
+    fechamento = primeiro_jogo - timedelta(minutes=30)
+
+    return agora < fechamento

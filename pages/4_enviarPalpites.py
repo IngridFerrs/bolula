@@ -5,7 +5,7 @@ USUARIOS = dict(st.secrets["usuarios"])
 from services.api_copa import (buscar_jogos_rodada,buscar_rodada_aberta)
 from utils.visual import (aplicar_visual,exibir_rodape_sidebar)
 import os
-from services.google_sheets import (salvar_palpites,participante_ja_enviou)
+from services.google_sheets import (salvar_ou_atualizar_palpites,participante_ja_enviou)
 
 
 # ==========================================
@@ -292,8 +292,10 @@ else:
                 palpites_usuario
             )
 
-            salvar_palpites(
-                df_envio
+            salvar_ou_atualizar_palpites(
+                df_envio,
+                usuario,
+                rodada_aberta
             )
 
             st.success(

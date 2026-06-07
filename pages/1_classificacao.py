@@ -1,9 +1,8 @@
-from utils.visual import aplicar_visual
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 from services.google_sheets import (ler_classificacao,ler_extrato)
-
+from utils.visual import aplicar_visual
 
 # ==================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -100,6 +99,7 @@ if classificacao.empty or jogos.empty:
     )
 
     st.stop()
+    
 classificacao["posicao"] = classificacao["posicao"].astype(int)
 
 classificacao["pontos"] = classificacao["pontos"].astype(int)

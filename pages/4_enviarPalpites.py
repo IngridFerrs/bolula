@@ -98,6 +98,8 @@ else:
 
     # TEMPORÁRIO PARA PRIMEIRA RODADA
     rodada_aberta = 1
+    # TEMPORÁRIO PARA PRIMEIRA RODADA
+    ENVIO_ABERTO = True
 
     # FUTURO: usar abertura automática
     # if st.session_state.rodada_aberta is None:
@@ -157,11 +159,7 @@ else:
         rodada_aberta
     )
 
-    prazo_aberto = rodada_ainda_aberta(
-        rodada_aberta
-    )
-    
-    if not prazo_aberto:
+    if not ENVIO_ABERTO:
 
         st.warning(
             "O prazo para envio ou edição dos palpites desta rodada foi encerrado."

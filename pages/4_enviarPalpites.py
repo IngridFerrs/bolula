@@ -160,10 +160,7 @@ else:
     prazo_aberto = rodada_ainda_aberta(
         rodada_aberta
     )
-    st.write(
-        "Prazo aberto:",
-        prazo_aberto
-    )
+    
     if not prazo_aberto:
 
         st.warning(

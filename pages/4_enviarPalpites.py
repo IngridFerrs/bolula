@@ -99,7 +99,7 @@ else:
     # TEMPORÁRIO PARA PRIMEIRA RODADA
     rodada_aberta = 1
     # TEMPORÁRIO PARA PRIMEIRA RODADA
-    ENVIO_ABERTO = True
+    ENVIO_ABERTO = False
 
     # FUTURO: usar abertura automática
     # if st.session_state.rodada_aberta is None:

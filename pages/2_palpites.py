@@ -62,11 +62,43 @@ def colorir_regra(valor):
 # CARREGAR DADOS
 # ==========================================
 
+palpites_base = ler_palpites()
+
+if palpites_base.empty:
+
+    st.warning(
+        "Nenhum palpite enviado até o momento."
+    )
+
+    st.stop()
+
+palpites_base["Rodada"] = palpites_base["rodada"].astype(int)
+palpites_base["Participante"] = palpites_base["participante"].astype(str)
+palpites_base["Jogo"] = (
+    palpites_base["time_casa"].astype(str)
+    + "x"
+    + palpites_base["time_fora"].astype(str)
+)
+palpites_base["Palpite"] = (
+    palpites_base["palpite_a"].astype(str)
+    + " x "
+    + palpites_base["palpite_b"].astype(str)
+)
+
+palpites = palpites_base[
+    [
+        "Rodada",
+        "Participante",
+        "Jogo",
+        "Palpite"
+    ]
+].copy()
+
 extrato = ler_extrato()
 
 if not extrato.empty:
 
-    palpites = extrato.rename(
+    extrato = extrato.rename(
         columns={
             "participante": "Participante",
             "rodada": "Rodada",
@@ -78,6 +110,8 @@ if not extrato.empty:
         }
     )
 
+    extrato["Rodada"] = extrato["Rodada"].astype(int)
+
     mapa_regras = {
         "placar_exato": "🎯 Placar Exato",
         "vencedor": "🏆 Vencedor",
@@ -85,55 +119,60 @@ if not extrato.empty:
         "erro": "❌ Erro"
     }
 
-    palpites["Regra"] = (
-        palpites["Regra"]
+    extrato["Regra"] = (
+        extrato["Regra"]
         .map(mapa_regras)
-        .fillna(palpites["Regra"])
+        .fillna(extrato["Regra"])
     )
 
-    palpites["Rodada"] = palpites["Rodada"].astype(int)
-    palpites["Pontos"] = palpites["Pontos"].astype(int)
+    extrato = extrato[
+        [
+            "Rodada",
+            "Participante",
+            "Jogo",
+            "Resultado",
+            "Regra",
+            "Pontos"
+        ]
+    ].copy()
 
-    tem_resultado = True
+    palpites = palpites.merge(
+        extrato,
+        on=[
+            "Rodada",
+            "Participante",
+            "Jogo"
+        ],
+        how="left"
+    )
 
 else:
 
-    st.warning(
-        "Ainda não há pontuação calculada. Exibindo apenas os palpites enviados."
-    )
+    palpites["Resultado"] = "-"
+    palpites["Regra"] = "-"
+    palpites["Pontos"] = "-"
 
-    palpites = ler_palpites()
+palpites["Resultado"] = palpites["Resultado"].fillna("-")
+palpites["Regra"] = palpites["Regra"].fillna("-")
+palpites["Pontos"] = palpites["Pontos"].fillna("-")
 
-    if palpites.empty:
+palpites["Jogo"] = palpites["Jogo"].str.replace(
+    "x",
+    " x ",
+    regex=False
+)
 
-        st.warning(
-            "Nenhum palpite enviado até o momento."
-        )
+palpites["Palpite"] = palpites["Palpite"].str.replace(
+    "x",
+    " x ",
+    regex=False
+)
 
-        st.stop()
-
-    palpites["Palpite"] = (
-        palpites["palpite_a"].astype(str)
-        + " x "
-        + palpites["palpite_b"].astype(str)
-    )
-
-    palpites["Jogo"] = (
-        palpites["time_casa"]
-        + " x "
-        + palpites["time_fora"]
-    )
-
-    palpites = palpites.rename(
-        columns={
-            "participante": "Participante",
-            "rodada": "Rodada"
-        }
-    )
-
-    palpites["Rodada"] = palpites["Rodada"].astype(int)
-
-    tem_resultado = False
+palpites["Resultado"] = palpites["Resultado"].astype(str).str.replace(
+    "x",
+    " x ",
+    regex=False
+)
 
 
 # ==========================================
@@ -143,20 +182,45 @@ else:
 rodadas = sorted(
     palpites["Rodada"].unique()
 )
+col_filtro1, col_filtro2, col_filtro3 = st.columns(3)
+with col_filtro1:
+    opcao_rodada = st.selectbox(
+        "Selecione a rodada",
+        ["Todas"] + rodadas
+    )
+with col_filtro2:
+    if opcao_rodada == "Todas":
 
-opcao_rodada = st.selectbox(
-    "Selecione a rodada",
-    ["Todas"] + rodadas
-)
+        opcao_jogo = st.selectbox(
+            "Selecione o jogo",
+            ["Todas"]
+        )
 
-participantes = sorted(
-    palpites["Participante"].unique()
-)
+        st.caption(
+            "Para filtrar por jogo, selecione primeiro uma rodada."
+        )
 
-opcao_participante = st.selectbox(
-    "Selecione o participante",
-    ["Todos"] + participantes
-)
+    else:
+
+        jogos_da_rodada = sorted(
+            palpites[
+                palpites["Rodada"] == opcao_rodada
+            ]["Jogo"].unique()
+        )
+
+        opcao_jogo = st.selectbox(
+            "Selecione o jogo",
+            ["Todas"] + jogos_da_rodada
+        )
+with col_filtro3:
+    participantes = sorted(
+        palpites["Participante"].unique()
+    )
+
+    opcao_participante = st.selectbox(
+        "Selecione o participante",
+        ["Todos"] + participantes
+    )
 
 
 # ==========================================
@@ -169,6 +233,12 @@ if opcao_rodada != "Todas":
 
     df_filtrado = df_filtrado[
         df_filtrado["Rodada"] == opcao_rodada
+    ]
+
+if opcao_jogo != "Todas":
+
+    df_filtrado = df_filtrado[
+        df_filtrado["Jogo"] == opcao_jogo
     ]
 
 if opcao_participante != "Todos":
@@ -229,30 +299,17 @@ if not LIBERAR_PALPITES:
 
     st.stop()
 
-if tem_resultado:
-
-    df_exibicao = df_filtrado[
-        [
-            "Rodada",
-            "Participante",
-            "Jogo",
-            "Palpite",
-            "Resultado",
-            "Regra",
-            "Pontos"
-        ]
-    ].copy()
-
-else:
-
-    df_exibicao = df_filtrado[
-        [
-            "Rodada",
-            "Participante",
-            "Jogo",
-            "Palpite"
-        ]
-    ].copy()
+df_exibicao = df_filtrado[
+    [
+        "Rodada",
+        "Participante",
+        "Jogo",
+        "Palpite",
+        "Resultado",
+        "Regra",
+        "Pontos"
+    ]
+].copy()
 
 
 df_exibicao = df_exibicao.sort_values(
@@ -268,22 +325,11 @@ df_exibicao = df_exibicao.sort_values(
 # MOSTRAR TABELA
 # ==========================================
 
-if tem_resultado:
-
-    st.dataframe(
-        df_exibicao.style.map(
-            colorir_regra,
-            subset=["Regra"]
-        ),
-        width="stretch",
-        hide_index=True,
-       
-    )
-
-else:
-
-    st.dataframe(
-        df_exibicao,
-        width="stretch",
-        hide_index=True
-    )
+st.dataframe(
+    df_exibicao.style.map(
+        colorir_regra,
+        subset=["Regra"]
+    ),
+    width="stretch",
+    hide_index=True
+)

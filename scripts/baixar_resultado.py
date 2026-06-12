@@ -174,8 +174,13 @@ print(df)
 # EXPORTAR EXCEL
 # ==========================================
 
-salvar_resultados(
-    df
+df = df.dropna(
+    subset=[
+        "gols_casa",
+        "gols_fora"
+    ]
 )
+
+salvar_resultados(df)
 
 print("\nRESULTADOS SALVOS NO GOOGLE SHEETS COM SUCESSO!")

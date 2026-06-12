@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 from services.google_sheets import (ler_classificacao,ler_extrato)
 from utils.visual import aplicar_visual
-from services.api_copa import buscar_rodada_aberta
+from services.api_copa import buscar_rodada_atual
 
 # ==================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -16,27 +16,16 @@ st.set_page_config(
 )
 aplicar_visual()
 
-rodada_atual = buscar_rodada_aberta()
+rodada_atual = buscar_rodada_atual()
 
 st.markdown(
     "<div style='height: 24px;'></div>",
     unsafe_allow_html=True
 )
 
-if rodada_atual is None:
-
-    st.status(
-        "🏆 A Copa começa já já!"
-    )
-
-else:
-
-    st.status(
-        f"🏆 Rodada atual: {rodada_atual}"
-    )
-
-
-
+if rodada_atual is not None:    
+        
+    st.info( f"🏆 Rodada atual: {rodada_atual}")
 
 # ==================================================
 # AJUSTES VISUAIS
@@ -260,7 +249,14 @@ st.markdown("")
 # LAYOUT PRINCIPAL
 # ==================================================
 
-df = classificacao.copy()
+df = (
+    classificacao
+    .sort_values(
+        by="pontos",
+        ascending=False
+    )
+    .head(10)
+)
 
 col_grafico, col_stats = st.columns([3, 1])
 
@@ -364,3 +360,17 @@ with col_stats:
         """,
         unsafe_allow_html=True
     )
+st.subheader("Classificação Completa",divider="rainbow")
+
+classificacao_exibicao = classificacao.rename(
+    columns={
+        "posicao":"Posição",
+        "participante":"Participante",
+        "pontos":"Pontos"
+    }
+)
+
+
+st.dataframe(
+    classificacao_exibicao,width="stretch",hide_index=True
+)

@@ -96,21 +96,18 @@ else:
     # RODADA ABERTA
     # ==========================================
 
-    # TEMPORÁRIO PARA PRIMEIRA RODADA
-    rodada_aberta = 1
-    # TEMPORÁRIO PARA PRIMEIRA RODADA
-    ENVIO_ABERTO = False
-
-    # FUTURO: usar abertura automática
-    # if st.session_state.rodada_aberta is None:
-    #     st.session_state.rodada_aberta = buscar_rodada_aberta()
-    #
-    # rodada_aberta = st.session_state.rodada_aberta
-    #
-    # if rodada_aberta is None:
-    #     st.warning("Nenhuma rodada está aberta para envio de palpites.")
-    #     st.stop()
-
+       
+    
+    st.session_state.rodada_aberta = buscar_rodada_aberta()
+    
+    rodada_aberta = st.session_state.rodada_aberta
+    
+    if rodada_aberta is None:
+        st.warning("Nenhuma rodada está aberta para envio de palpites.")
+        st.stop()
+    ENVIO_ABERTO = rodada_ainda_aberta(
+    rodada_aberta
+    )
     # ==========================================
     # CARREGAR JOGOS DA API
     # ==========================================
@@ -121,10 +118,17 @@ else:
     ):
 
         with st.spinner("Carregando jogos da rodada..."):
-
-            st.session_state.jogos_rodada = buscar_jogos_rodada(
-                rodada_aberta
-            )
+            try:
+                st.session_state.jogos_rodada = buscar_jogos_rodada(
+                    rodada_aberta
+                )
+            except Exception as erro:
+                st.erro(
+                    "Não foi possível consultar a API dos jogos no momento."
+                    "Tente atualizar a página em alguns instantes."
+                )
+                
+                st.stop()
 
         st.session_state.rodada_cache = rodada_aberta
 

@@ -130,8 +130,8 @@ else:
                 )
             except Exception as erro:
                 st.error(
-                    "Não foi possível consultar a API dos jogos no momento."
-                    "Tente atualizar a página em alguns instantes."
+                    "Não foi possível carregar os jogos da rodada. "
+                    "Verifique a aba JOGOS no Google Sheets."
                 )
                 
                 st.stop()

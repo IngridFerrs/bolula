@@ -15,7 +15,9 @@ dependencies = [
     "image (>=1.5.33,<2.0.0)",
     "plotly (>=6.7.0,<7.0.0)",
     "gspread (>=6.2.1,<7.0.0)",
-    "google-auth (>=2.55.0,<3.0.0)"
+    "google-auth (>=2.55.0,<3.0.0)",
+    "psycopg2-binary (>=2.9.12,<3.0.0)",
+    "python-dotenv (>=1.2.2,<2.0.0)"
 ]
 
 [build-system]

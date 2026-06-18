@@ -318,31 +318,31 @@ def salvar_ou_atualizar_palpites(df_envio, participante, rodada):
         ABA_PALPITES
     )
 
+    cabecalho_padrao = [
+        "participante",
+        "rodada",
+        "jogo_id",
+        "time_casa",
+        "time_fora",
+        "palpite_a",
+        "palpite_b"
+    ]
+
     valores = aba.get_all_values()
 
     if not valores:
 
         aba.append_row(
-            [
-                "participante",
-                "rodada",
-                "jogo_id",
-                "time_casa",
-                "time_fora",
-                "palpite_a",
-                "palpite_b"
-            ]
+            cabecalho_padrao
         )
 
         valores = aba.get_all_values()
 
     cabecalho = valores[0]
 
-    linhas_para_manter = [
-        cabecalho
-    ]
+    linhas_existentes = {}
 
-    for linha in valores[1:]:
+    for numero_linha, linha in enumerate(valores[1:], start=2):
 
         registro = dict(
             zip(
@@ -351,47 +351,65 @@ def salvar_ou_atualizar_palpites(df_envio, participante, rodada):
             )
         )
 
-        mesmo_participante = (
-            str(registro.get("participante", "")).strip()
-            == str(participante).strip()
+        chave = (
+            str(registro.get("participante", "")).strip(),
+            str(registro.get("rodada", "")).strip(),
+            str(registro.get("jogo_id", "")).strip()
         )
 
-        mesma_rodada = (
-            str(registro.get("rodada", "")).strip()
-            == str(rodada).strip()
+        linhas_existentes[chave] = numero_linha
+
+    atualizacoes = []
+    novas_linhas = []
+
+    for _, linha in df_envio.iterrows():
+
+        chave = (
+            str(participante).strip(),
+            str(rodada).strip(),
+            str(linha["jogo_id"]).strip()
         )
 
-        if not (
-            mesmo_participante
-            and mesma_rodada
-        ):
+        nova_linha = [
+            linha["participante"],
+            linha["rodada"],
+            linha["jogo_id"],
+            linha["time_casa"],
+            linha["time_fora"],
+            linha["palpite_a"],
+            linha["palpite_b"]
+        ]
 
-            linhas_para_manter.append(
-                linha
+        if chave in linhas_existentes:
+
+            numero_linha = linhas_existentes[chave]
+
+            atualizacoes.append(
+                {
+                    "range": f"A{numero_linha}:G{numero_linha}",
+                    "values": [
+                        nova_linha
+                    ]
+                }
             )
 
-    novas_linhas = df_envio[
-        [
-            "participante",
-            "rodada",
-            "jogo_id",
-            "time_casa",
-            "time_fora",
-            "palpite_a",
-            "palpite_b"
-        ]
-    ].values.tolist()
+        else:
 
-    linhas_finais = (
-        linhas_para_manter
-        + novas_linhas
-    )
+            novas_linhas.append(
+                nova_linha
+            )
 
-    aba.clear()
+    if atualizacoes:
 
-    aba.update(
-        linhas_finais
-    )
+        aba.batch_update(
+            atualizacoes
+        )
+
+    if novas_linhas:
+
+        aba.append_rows(
+            novas_linhas
+        )
 
 def buscar_palpites_participante_rodada(participante, rodada):
 

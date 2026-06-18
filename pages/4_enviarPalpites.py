@@ -138,7 +138,7 @@ else:
         st.session_state.rodada_cache = rodada_aberta
 
     df_rodada = st.session_state.jogos_rodada
-
+    
     if df_rodada.empty:
 
         st.error(
@@ -163,10 +163,21 @@ else:
     # VERIFICAR PRAZO E ENVIO
     # ==========================================
 
-    palpites_existentes = buscar_palpites_participante_rodada(
-        usuario,
-        rodada_aberta
+    try:
+
+        palpites_existentes = buscar_palpites_participante_rodada(
+            usuario,
+            rodada_aberta
     )
+
+    except Exception:
+
+        st.error(
+            "Não foi possível carregar seus palpites no momento. "
+            "Tente atualizar a página em alguns instantes."
+        )
+
+        st.stop()
 
     ja_enviou = bool(
         palpites_existentes

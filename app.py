@@ -17,7 +17,7 @@ st.set_page_config(
 # ==========================================
 
 
-MANUTENCAO = True
+MANUTENCAO = False
 
 if MANUTENCAO:
 

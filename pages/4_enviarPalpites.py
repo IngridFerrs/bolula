@@ -113,7 +113,7 @@ else:
     # ==========================================
     #MANUAL
     rodada_aberta = 2
-    ENVIO_ABERTO = True
+    ENVIO_ABERTO = False
 
 
 

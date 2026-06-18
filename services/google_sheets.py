@@ -43,7 +43,7 @@ def abrir_aba(nome_aba):
         nome_aba
     )
 
-
+@st.cache_data(ttl=30)
 def ler_palpites():
 
     colunas = [
@@ -410,7 +410,7 @@ def salvar_ou_atualizar_palpites(df_envio, participante, rodada):
         aba.append_rows(
             novas_linhas
         )
-
+    st.cache_data.clear()
 def buscar_palpites_participante_rodada(participante, rodada):
 
     df = ler_palpites()
@@ -444,7 +444,7 @@ def buscar_palpites_participante_rodada(participante, rodada):
 
     return palpites_existentes
 
-
+@st.cache_data(ttl=300)
 def ler_jogos_rodada(rodada):
     aba = abrir_aba("JOGOS")
 

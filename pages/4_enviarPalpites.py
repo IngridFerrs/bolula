@@ -15,7 +15,8 @@ from services.api_copa import (
 from services.google_sheets import (
     salvar_ou_atualizar_palpites,
     participante_ja_enviou,
-    buscar_palpites_participante_rodada
+    buscar_palpites_participante_rodada,
+    ler_jogos_rodada
 )
 
 
@@ -112,8 +113,8 @@ else:
     # CARREGAR JOGOS DA API
     # ==========================================
     #MANUAL
-    rodada_aberta = 2
-    ENVIO_ABERTO = False
+    rodada_aberta = 3
+    ENVIO_ABERTO = True
 
 
 
@@ -124,7 +125,7 @@ else:
 
         with st.spinner("Carregando jogos da rodada..."):
             try:
-                st.session_state.jogos_rodada = buscar_jogos_rodada(
+                st.session_state.jogos_rodada = ler_jogos_rodada(
                     rodada_aberta
                 )
             except Exception as erro:
@@ -138,6 +139,8 @@ else:
         st.session_state.rodada_cache = rodada_aberta
 
     df_rodada = st.session_state.jogos_rodada
+
+   
     
     if df_rodada.empty:
 

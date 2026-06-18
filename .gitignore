@@ -8,3 +8,4 @@ __pycache__/
 config/usuarios.py
 .streamlit/secrets.toml
 config/google_credentials.json
+dados/

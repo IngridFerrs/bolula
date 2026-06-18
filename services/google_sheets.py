@@ -443,3 +443,21 @@ def buscar_palpites_participante_rodada(participante, rodada):
         }
 
     return palpites_existentes
+
+
+def ler_jogos_rodada(rodada):
+    aba = abrir_aba("JOGOS")
+
+    valores = aba.get_all_records()
+
+    df = pd.DataFrame(valores)
+
+    if df.empty:
+        return df
+
+    df["rodada"] = df["rodada"].astype(int)
+    df["jogo_id"] = df["jogo_id"].astype(int)
+
+    df = df[df["rodada"] == int(rodada)].copy()
+
+    return df

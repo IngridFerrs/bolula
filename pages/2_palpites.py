@@ -23,7 +23,7 @@ st.set_page_config(
 aplicar_visual()
 exibir_rodape_sidebar()
 
-LIBERAR_PALPITES = True
+LIBERAR_PALPITES = False
 
 st.title("📊 Palpites dos Participantes")
 

@@ -173,7 +173,7 @@ else:
             rodada_aberta
     )
 
-    except Exception:
+    except Exception as erro:
 
         st.error(
             "Não foi possível carregar seus palpites no momento. "

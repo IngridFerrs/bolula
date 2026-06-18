@@ -16,6 +16,20 @@ st.set_page_config(
 # NAVEGAÇÃO
 # ==========================================
 
+
+MANUTENCAO = True
+
+if MANUTENCAO:
+
+    st.title("🚧 BOLULA em manutenção")
+
+    st.warning(
+        "Estamos ajustando o sistema para melhorar o envio dos palpites. "
+        "Volte em alguns minutos."
+    )
+
+    st.stop()
+
 pages = {
 
     "BOLULA": [

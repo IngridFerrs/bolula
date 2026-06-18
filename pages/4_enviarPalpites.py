@@ -179,7 +179,7 @@ else:
             "Não foi possível carregar seus palpites no momento. "
             "Tente atualizar a página em alguns instantes."
         )
-
+        st.exception(erro)
         st.stop()
 
     ja_enviou = bool(

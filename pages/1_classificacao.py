@@ -16,8 +16,15 @@ st.set_page_config(
 )
 aplicar_visual()
 
-rodada_atual = buscar_rodada_atual()
+#rodada_atual = buscar_rodada_atual()
 
+try:
+
+    rodada_atual = buscar_rodada_atual()
+
+except Exception:
+
+    rodada_atual = None
 st.markdown(
     "<div style='height: 24px;'></div>",
     unsafe_allow_html=True

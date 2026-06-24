@@ -174,14 +174,14 @@ palpites["Resultado"] = palpites["Resultado"].astype(str).str.replace(
     regex=False
 )
 
-# ==========================================
-# BLOQUEIO TEMPORÁRIO DA RODADA 3
-# Remover este bloco quando a Rodada 3 começar
-# ==========================================
+# # ==========================================
+# # BLOQUEIO TEMPORÁRIO DA RODADA 3
+# # Remover este bloco quando a Rodada 3 começar
+# # ==========================================
 
-palpites = palpites[
-    palpites["Rodada"] != 3
-].copy()
+# palpites = palpites[
+#     palpites["Rodada"] != 3
+# ].copy()
 
 
 

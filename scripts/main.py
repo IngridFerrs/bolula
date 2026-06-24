@@ -56,8 +56,28 @@ resultados = resultados.rename(
 
 palpites["rodada"] = palpites["rodada"].astype(int)
 palpites["jogo_id"] = palpites["jogo_id"].astype(int)
+#palpites["palpite_a"] = palpites["palpite_a"].astype(int)
+#palpites["palpite_b"] = palpites["palpite_b"].astype(int)
+palpites["palpite_a"] = pd.to_numeric(
+    palpites["palpite_a"],
+    errors="coerce"
+)
+
+palpites["palpite_b"] = pd.to_numeric(
+    palpites["palpite_b"],
+    errors="coerce"
+)
+
+palpites = palpites.dropna(
+    subset=[
+        "palpite_a",
+        "palpite_b"
+    ]
+)
+
 palpites["palpite_a"] = palpites["palpite_a"].astype(int)
 palpites["palpite_b"] = palpites["palpite_b"].astype(int)
+
 
 resultados["rodada"] = resultados["rodada"].astype(int)
 resultados["jogo_id"] = resultados["jogo_id"].astype(int)

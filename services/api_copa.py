@@ -453,7 +453,7 @@ def buscar_jogos_rodada(rodada_desejada):
 def traduzir_stage(stage):
 
     mapa = {
-        "LAST_32": "32-avos",
+        "LAST_32": "16-avos",
         "LAST_16": "Oitavas",
         "QUARTER_FINALS": "Quartas",
         "SEMI_FINALS": "Semifinal",

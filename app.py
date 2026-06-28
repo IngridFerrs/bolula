@@ -52,6 +52,11 @@ pages = {
         st.Page(
             "pages/4_enviarPalpites.py",
             title="📤 Envio Palpites"
+        ),
+
+        st.Page(
+            "pages/5_mata_mata.py",
+            title="🥅 Palpites Mata-mata"
         )
 
     ]

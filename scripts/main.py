@@ -6,7 +6,7 @@ import glob
 sys.path.append(
     str(Path(__file__).resolve().parent.parent)
 )
-from services.google_sheets import (ler_palpites,ler_resultados,salvar_classificacao,salvar_extrato)
+from services.google_sheets import (ler_palpites,ler_resultados,salvar_classificacao,salvar_extrato,ler_extrato_mata_mata)
 
 # Leitura de Arquivos
 
@@ -214,27 +214,265 @@ print(
 
 #Classificação Geral
 
-classificacao = (dados.groupby("participante")["pontos"].sum().reset_index())
+# ==========================================
+# CLASSIFICAÇÃO DA FASE DE GRUPOS
+# ==========================================
 
-# Ordenar classificação
+classificacao_grupos = (
+    dados
+    .groupby(
+        "participante",
+        as_index=False
+    )["pontos"]
+    .sum()
+    .rename(
+        columns={
+            "pontos": "pontos_grupos"
+        }
+    )
+)
 
-classificacao = classificacao.sort_values(by="pontos",ascending=False)
+classificacao_grupos["participante"] = (
+    classificacao_grupos["participante"]
+    .astype(str)
+    .str.strip()
+)
+
+classificacao_grupos["pontos_grupos"] = (
+    pd.to_numeric(
+        classificacao_grupos["pontos_grupos"],
+        errors="coerce"
+    )
+    .fillna(0)
+    .astype(int)
+)
 
 
-#Criar Posição
+# ==========================================
+# CARREGAR EXTRATO DO MATA-MATA
+# ==========================================
 
-classificacao["posicao"]  = range(1,len(classificacao) + 1)
+print(
+    "\nCARREGANDO PONTOS DO MATA-MATA...\n"
+)
 
-#Reorganizar Colunas
+try:
 
-classificacao = classificacao [["posicao","participante","pontos"]]
+    extrato_mata_mata = ler_extrato_mata_mata()
+
+except Exception as erro:
+
+    print(
+        "ERRO ao ler EXTRATO_MATA_MATA."
+    )
+
+    print(erro)
+
+    print(
+        "A classificação não será atualizada."
+    )
+
+    exit()
 
 
-# Mostrar Classificação Geral
+# ==========================================
+# CLASSIFICAÇÃO DO MATA-MATA
+# ==========================================
 
-print("\nCLASSIFICAÇÃO GERAL\n")
+if extrato_mata_mata.empty:
 
-print(classificacao)
+    print(
+        "EXTRATO_MATA_MATA está vazio. "
+        "A classificação terá somente os pontos "
+        "da fase de grupos."
+    )
+
+    classificacao_mata_mata = pd.DataFrame(
+        columns=[
+            "participante",
+            "pontos_mata_mata"
+        ]
+    )
+
+else:
+
+    colunas_necessarias = {
+        "participante",
+        "pontos"
+    }
+
+    colunas_faltantes = (
+        colunas_necessarias
+        - set(extrato_mata_mata.columns)
+    )
+
+    if colunas_faltantes:
+
+        print(
+            "ERRO: faltam colunas em "
+            "EXTRATO_MATA_MATA:"
+        )
+
+        print(
+            ", ".join(
+                sorted(colunas_faltantes)
+            )
+        )
+
+        print(
+            "A classificação não será atualizada."
+        )
+
+        exit()
+
+    extrato_mata_mata = (
+        extrato_mata_mata.copy()
+    )
+
+    extrato_mata_mata["participante"] = (
+        extrato_mata_mata["participante"]
+        .astype(str)
+        .str.strip()
+    )
+
+    extrato_mata_mata["pontos"] = (
+        pd.to_numeric(
+            extrato_mata_mata["pontos"],
+            errors="coerce"
+        )
+        .fillna(0)
+        .astype(int)
+    )
+
+    classificacao_mata_mata = (
+        extrato_mata_mata
+        .groupby(
+            "participante",
+            as_index=False
+        )["pontos"]
+        .sum()
+        .rename(
+            columns={
+                "pontos": "pontos_mata_mata"
+            }
+        )
+    )
+
+
+# ==========================================
+# SOMAR GRUPOS + MATA-MATA
+# ==========================================
+
+classificacao_completa = (
+    classificacao_grupos
+    .merge(
+        classificacao_mata_mata,
+        on="participante",
+        how="outer"
+    )
+)
+
+classificacao_completa[
+    "pontos_grupos"
+] = pd.to_numeric(
+    classificacao_completa[
+        "pontos_grupos"
+    ],
+    errors="coerce"
+).fillna(0).astype(int)
+
+classificacao_completa[
+    "pontos_mata_mata"
+] = pd.to_numeric(
+    classificacao_completa[
+        "pontos_mata_mata"
+    ],
+    errors="coerce"
+).fillna(0).astype(int)
+
+classificacao_completa["pontos"] = (
+    classificacao_completa[
+        "pontos_grupos"
+    ]
+    +
+    classificacao_completa[
+        "pontos_mata_mata"
+    ]
+)
+
+
+# ==========================================
+# ORDENAR E CRIAR POSIÇÃO
+# ==========================================
+
+classificacao_completa = (
+    classificacao_completa
+    .sort_values(
+        by=[
+            "pontos",
+            "participante"
+        ],
+        ascending=[
+            False,
+            True
+        ]
+    )
+    .reset_index(
+        drop=True
+    )
+)
+
+classificacao_completa["posicao"] = (
+    range(
+        1,
+        len(classificacao_completa) + 1
+    )
+)
+
+
+# ==========================================
+# CLASSIFICAÇÃO SALVA NA PLANILHA
+# ==========================================
+
+classificacao = classificacao_completa[
+    [
+        "posicao",
+        "participante",
+        "pontos"
+    ]
+].copy()
+
+
+# ==========================================
+# MOSTRAR CONFERÊNCIA DETALHADA
+# ==========================================
+
+print(
+    "\nCLASSIFICAÇÃO DETALHADA\n"
+)
+
+print(
+    classificacao_completa[
+        [
+            "participante",
+            "pontos_grupos",
+            "pontos_mata_mata",
+            "pontos"
+        ]
+    ].to_string(
+        index=False
+    )
+)
+
+print(
+    "\nCLASSIFICAÇÃO GERAL\n"
+)
+
+print(
+    classificacao.to_string(
+        index=False
+    )
+)
 
 #Classsificação Por Rodada
 
@@ -293,12 +531,43 @@ extrato = dados [
 # SALVAR NO GOOGLE SHEETS
 # ==========================================
 
+# ==========================================
+# CONFIRMAR ANTES DE GRAVAR
+# ==========================================
+
+confirmacao = input(
+    "\nDigite SIM para atualizar "
+    "CLASSIFICACAO e EXTRATO: "
+)
+
+if confirmacao.strip().upper() != "SIM":
+
+    print(
+        "\nOperação cancelada."
+    )
+
+    print(
+        "Nenhuma aba foi alterada."
+    )
+
+    exit()
+
+
+# ==========================================
+# SALVAR NO GOOGLE SHEETS
+# ==========================================
+
 salvar_classificacao(
     classificacao
 )
 
 salvar_extrato(
     extrato
+)
+
+print(
+    "\nCLASSIFICAÇÃO E EXTRATO SALVOS "
+    "NO GOOGLE SHEETS COM SUCESSO!"
 )
 
 print("\nCLASSIFICAÇÃO E EXTRATO SALVOS NO GOOGLE SHEETS COM SUCESSO!")

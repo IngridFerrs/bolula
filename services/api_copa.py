@@ -392,3 +392,439 @@ def buscar_rodada_atual():
             rodada_atual = rodada
 
     return rodada_atual
+
+def buscar_jogos_rodada(rodada_desejada):
+
+
+    headers = {
+        "X-Auth-Token": API_KEY
+    }
+
+    url = (
+        f"https://api.football-data.org/v4/"
+        f"competitions/{COMPETICAO}/matches"
+    )
+
+    response = requests.get(
+        url,
+        headers=headers
+    )
+
+    dados = response.json()
+
+    # --------------------------------------
+    # VALIDAR RESPOSTA
+    # --------------------------------------
+
+    if "matches" not in dados:
+
+        print("\nERRO NA API:\n")
+        print(dados)
+
+        return pd.DataFrame()
+
+    jogos = dados["matches"]
+
+    lista_jogos = []
+
+    for jogo in jogos:
+
+        rodada = jogo["matchday"]
+
+        if rodada != rodada_desejada:
+            continue
+
+        lista_jogos.append({
+
+            "rodada": rodada,
+
+            "jogo_id": jogo["id"],
+
+            "time_casa": jogo["homeTeam"]["shortName"],
+
+            "time_fora": jogo["awayTeam"]["shortName"],
+
+            "data": jogo["utcDate"]
+
+        })
+
+    return pd.DataFrame(lista_jogos)
+
+def traduzir_stage(stage):
+
+    mapa = {
+        "LAST_32": "32-avos",
+        "LAST_16": "Oitavas",
+        "QUARTER_FINALS": "Quartas",
+        "SEMI_FINALS": "Semifinal",
+        "THIRD_PLACE": "3º Lugar",
+        "FINAL": "Final"
+    }
+
+    return mapa.get(stage, stage)
+
+
+def buscar_jogos_fase(stage_desejado):
+
+    headers = {
+        "X-Auth-Token": API_KEY
+    }
+
+    url = (
+        f"https://api.football-data.org/v4/"
+        f"competitions/{COMPETICAO}/matches"
+    )
+
+    response = requests.get(
+        url,
+        headers=headers
+    )
+
+    dados = response.json()
+
+    if "matches" not in dados:
+
+        print("\nERRO NA API:\n")
+        print(dados)
+
+        return pd.DataFrame()
+
+    lista_jogos = []
+
+    for jogo in dados["matches"]:
+
+        stage = jogo["stage"]
+
+        if stage != stage_desejado:
+            continue
+
+        time_casa = jogo["homeTeam"]["shortName"]
+        time_fora = jogo["awayTeam"]["shortName"]
+
+        if time_casa is None or time_fora is None:
+            continue
+
+        lista_jogos.append(
+            {
+                "fase": stage,
+                "fase_nome": traduzir_stage(stage),
+                "jogo_id": jogo["id"],
+                "time_casa": time_casa,
+                "time_fora": time_fora,
+                "data": jogo["utcDate"]
+            }
+        )
+
+    return pd.DataFrame(lista_jogos)
+
+COLUNAS_RESULTADOS_MATA_MATA = [
+    "fase",
+    "jogo_id",
+    "time_casa",
+    "time_fora",
+    "gols_casa_90",
+    "gols_fora_90",
+    "duracao",
+    "vencedor_penaltis"
+]
+
+
+def dataframe_resultados_mata_mata_vazio():
+
+    return pd.DataFrame(
+        columns=COLUNAS_RESULTADOS_MATA_MATA
+    )
+
+def obter_nome_time(dados_time):
+
+    if not dados_time:
+        return None
+
+    return (
+        dados_time.get("shortName")
+        or dados_time.get("name")
+    )
+def obter_gols_placar(placar, lado):
+
+    if not placar:
+        return None
+
+    if lado == "casa":
+
+        valor = placar.get("home")
+
+        if valor is None:
+            valor = placar.get("homeTeam")
+
+        return valor
+
+    if lado == "fora":
+
+        valor = placar.get("away")
+
+        if valor is None:
+            valor = placar.get("awayTeam")
+
+        return valor
+
+    raise ValueError(
+        "O lado deve ser 'casa' ou 'fora'."
+    )
+def obter_vencedor_penaltis(
+    duracao,
+    vencedor_api,
+    time_casa,
+    time_fora
+):
+
+    duracao = str(
+        duracao or ""
+    ).strip().upper()
+
+    vencedor_api = str(
+        vencedor_api or ""
+    ).strip().upper()
+
+    if duracao != "PENALTY_SHOOTOUT":
+        return ""
+
+    if vencedor_api == "HOME_TEAM":
+        return time_casa
+
+    if vencedor_api == "AWAY_TEAM":
+        return time_fora
+
+    return ""
+def buscar_resultados_fase(stage_desejado):
+
+    headers = {
+        "X-Auth-Token": API_KEY
+    }
+
+    url = (
+        f"https://api.football-data.org/v4/"
+        f"competitions/{COMPETICAO}/matches"
+    )
+
+    try:
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=30
+        )
+
+        response.raise_for_status()
+
+    except requests.RequestException as erro:
+
+        print(
+            "\nERRO AO CONSULTAR RESULTADOS DA API:\n"
+        )
+
+        print(erro)
+
+        return dataframe_resultados_mata_mata_vazio()
+
+    try:
+
+        dados = response.json()
+
+    except ValueError:
+
+        print(
+            "\nA API retornou uma resposta inválida.\n"
+        )
+
+        return dataframe_resultados_mata_mata_vazio()
+
+    if "matches" not in dados:
+
+        print(
+            "\nERRO NA RESPOSTA DA API:\n"
+        )
+
+        print(dados)
+
+        return dataframe_resultados_mata_mata_vazio()
+
+    stage_desejado = str(
+        stage_desejado
+    ).strip().upper()
+
+    lista_resultados = []
+
+    jogos_da_fase = 0
+    jogos_finalizados = 0
+
+    for jogo in dados["matches"]:
+
+        fase = str(
+            jogo.get("stage") or ""
+        ).strip().upper()
+
+        if fase != stage_desejado:
+            continue
+
+        jogos_da_fase += 1
+
+        status = str(
+            jogo.get("status") or ""
+        ).strip().upper()
+
+        if status != "FINISHED":
+            continue
+
+        jogos_finalizados += 1
+
+        time_casa = obter_nome_time(
+            jogo.get("homeTeam")
+        )
+
+        time_fora = obter_nome_time(
+            jogo.get("awayTeam")
+        )
+
+        if not time_casa or not time_fora:
+
+            print(
+                "Jogo ignorado por não possuir "
+                f"os dois times definidos: {jogo.get('id')}"
+            )
+
+            continue
+
+        score = jogo.get("score") or {}
+
+        duracao = str(
+            score.get("duration") or ""
+        ).strip().upper()
+
+        vencedor_api = str(
+            score.get("winner") or ""
+        ).strip().upper()
+
+        regular_time = (
+            score.get("regularTime")
+            or {}
+        )
+
+        full_time = (
+            score.get("fullTime")
+            or {}
+        )
+
+        # ------------------------------------------
+        # PLACAR DOS 90 MINUTOS
+        # ------------------------------------------
+
+        if duracao == "REGULAR":
+
+            # Em jogos encerrados nos 90 minutos,
+            # tenta regularTime e usa fullTime
+            # como alternativa.
+            gols_casa_90 = obter_gols_placar(
+                regular_time,
+                "casa"
+            )
+
+            gols_fora_90 = obter_gols_placar(
+                regular_time,
+                "fora"
+            )
+
+            if (
+                gols_casa_90 is None
+                or gols_fora_90 is None
+            ):
+
+                gols_casa_90 = obter_gols_placar(
+                    full_time,
+                    "casa"
+                )
+
+                gols_fora_90 = obter_gols_placar(
+                    full_time,
+                    "fora"
+                )
+
+        elif duracao in {
+            "EXTRA_TIME",
+            "PENALTY_SHOOTOUT"
+        }:
+
+            # Quando houve prorrogação ou pênaltis,
+            # não usamos fullTime.
+            # Precisamos obrigatoriamente do placar
+            # dos 90 minutos.
+            gols_casa_90 = obter_gols_placar(
+                regular_time,
+                "casa"
+            )
+
+            gols_fora_90 = obter_gols_placar(
+                regular_time,
+                "fora"
+            )
+
+        else:
+
+            print(
+                "Jogo ignorado por apresentar "
+                f"duração desconhecida: "
+                f"{jogo.get('id')} - {duracao}"
+            )
+
+            continue
+
+        if (
+            gols_casa_90 is None
+            or gols_fora_90 is None
+        ):
+
+            print(
+                "Jogo ignorado porque o placar "
+                f"dos 90 minutos não está disponível: "
+                f"{jogo.get('id')}"
+            )
+
+            continue
+
+        vencedor_penaltis = obter_vencedor_penaltis(
+            duracao,
+            vencedor_api,
+            time_casa,
+            time_fora
+        )
+
+        lista_resultados.append(
+            {
+                "fase": fase,
+                "jogo_id": int(jogo["id"]),
+                "time_casa": str(time_casa).strip(),
+                "time_fora": str(time_fora).strip(),
+                "gols_casa_90": int(gols_casa_90),
+                "gols_fora_90": int(gols_fora_90),
+                "duracao": duracao,
+                "vencedor_penaltis": vencedor_penaltis
+            }
+        )
+
+    print(
+        f"\nJogos encontrados em {stage_desejado}: "
+        f"{jogos_da_fase}"
+    )
+
+    print(
+        f"Jogos finalizados: {jogos_finalizados}"
+    )
+
+    print(
+        "Resultados válidos para o Bolula: "
+        f"{len(lista_resultados)}"
+    )
+
+    return pd.DataFrame(
+        lista_resultados,
+        columns=COLUNAS_RESULTADOS_MATA_MATA
+    )

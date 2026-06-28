@@ -1,9 +1,11 @@
 import pandas as pd
 import streamlit as st
-from services.api_copa import rodada_ja_comecou
+from services.api_copa import rodada_ja_comecou,traduzir_stage
 from services.google_sheets import (
     ler_palpites,
-    ler_extrato
+    ler_extrato,
+    ler_palpites_mata_mata,
+    ler_extrato_mata_mata
 )
 from utils.visual import (
     aplicar_visual,
@@ -24,12 +26,324 @@ aplicar_visual()
 exibir_rodape_sidebar()
 
 LIBERAR_PALPITES = True
+LIBERAR_PALPITES_MATA_MATA = True
 
 st.title("📊 Palpites dos Participantes")
 
 st.divider()
 
+# ==========================================
+# SELEÇÃO DA ETAPA
+# ==========================================
 
+etapa_selecionada = st.radio(
+    "Selecione a etapa",
+    [
+        "Fase de grupos",
+        "Mata-mata"
+    ],
+    horizontal=True,
+    key="etapa_pagina_palpites"
+)
+
+
+# ==========================================
+# PALPITES DO MATA-MATA
+# ==========================================
+
+if etapa_selecionada == "Mata-mata":
+
+    if not LIBERAR_PALPITES_MATA_MATA:
+
+        st.warning(
+            "Os palpites do mata-mata ainda estão ocultos. "
+            "Eles serão liberados após o encerramento dos envios."
+        )
+
+        st.stop()
+
+    palpites_mata = ler_palpites_mata_mata()
+
+    if palpites_mata.empty:
+
+        st.warning(
+            "Nenhum palpite do mata-mata foi enviado até o momento."
+        )
+
+        st.stop()
+
+    palpites_mata = palpites_mata.copy()
+
+    # Campos internos usados para cruzar os dados
+    palpites_mata["FaseCodigo"] = (
+        palpites_mata["fase"]
+        .astype(str)
+        .str.strip()
+    )
+
+    palpites_mata["JogoId"] = (
+        palpites_mata["jogo_id"]
+        .astype(str)
+        .str.strip()
+    )
+
+    # Campos para exibição
+    palpites_mata["Fase"] = (
+        palpites_mata["FaseCodigo"]
+        .apply(traduzir_stage)
+    )
+
+    palpites_mata["Participante"] = (
+        palpites_mata["participante"]
+        .astype(str)
+        .str.strip()
+    )
+
+    palpites_mata["Jogo"] = (
+        palpites_mata["time_casa"].astype(str).str.strip()
+        + " x "
+        + palpites_mata["time_fora"].astype(str).str.strip()
+    )
+
+    gols_casa = (
+        pd.to_numeric(
+            palpites_mata["palpite_a"],
+            errors="coerce"
+        )
+        .fillna(0)
+        .astype(int)
+        .astype(str)
+    )
+
+    gols_fora = (
+        pd.to_numeric(
+            palpites_mata["palpite_b"],
+            errors="coerce"
+        )
+        .fillna(0)
+        .astype(int)
+        .astype(str)
+    )
+
+    palpites_mata["Palpite — 90 min"] = (
+        gols_casa
+        + " x "
+        + gols_fora
+    )
+
+    palpites_mata["Vencedor nos pênaltis"] = (
+        palpites_mata["vencedor_penaltis"]
+        .fillna("-")
+        .astype(str)
+        .str.strip()
+        .replace("", "-")
+    )
+
+
+    # ======================================
+    # RESULTADOS E PONTUAÇÃO DO MATA-MATA
+    # ======================================
+
+    extrato_mata = ler_extrato_mata_mata()
+
+    if not extrato_mata.empty:
+
+        extrato_mata = extrato_mata.copy()
+
+        extrato_mata["Participante"] = (
+            extrato_mata["participante"]
+            .astype(str)
+            .str.strip()
+        )
+
+        extrato_mata["FaseCodigo"] = (
+            extrato_mata["fase"]
+            .astype(str)
+            .str.strip()
+        )
+
+        extrato_mata["JogoId"] = (
+            extrato_mata["jogo_id"]
+            .astype(str)
+            .str.strip()
+        )
+
+        extrato_mata = extrato_mata.rename(
+            columns={
+                "resultado_90": "Resultado — 90 min",
+                "vencedor_penaltis_real": "Vencedor real nos pênaltis",
+                "pontos_base": "Pontos base",
+                "bonus_penaltis": "Bônus pênaltis",
+                "pontos": "Pontos"
+            }
+        )
+
+        extrato_mata = extrato_mata[
+            [
+                "Participante",
+                "FaseCodigo",
+                "JogoId",
+                "Resultado — 90 min",
+                "Vencedor real nos pênaltis",
+                "Pontos base",
+                "Bônus pênaltis",
+                "Pontos"
+            ]
+        ].copy()
+
+        palpites_mata = palpites_mata.merge(
+            extrato_mata,
+            on=[
+                "Participante",
+                "FaseCodigo",
+                "JogoId"
+            ],
+            how="left"
+        )
+
+    else:
+
+        palpites_mata["Resultado — 90 min"] = "-"
+        palpites_mata["Vencedor real nos pênaltis"] = "-"
+        palpites_mata["Pontos base"] = "-"
+        palpites_mata["Bônus pênaltis"] = "-"
+        palpites_mata["Pontos"] = "-"
+
+
+    # Preencher campos ainda sem resultado
+    colunas_sem_resultado = [
+        "Resultado — 90 min",
+        "Vencedor real nos pênaltis",
+        "Pontos base",
+        "Bônus pênaltis",
+        "Pontos"
+    ]
+
+    for coluna in colunas_sem_resultado:
+
+        palpites_mata[coluna] = (
+            palpites_mata[coluna]
+            .fillna("-")
+            .replace("", "-")
+        )
+
+
+    # ======================================
+    # FILTROS
+    # ======================================
+
+    fases = sorted(
+        palpites_mata["Fase"].dropna().unique()
+    )
+
+    col_fase, col_jogo, col_participante = st.columns(3)
+
+    with col_fase:
+
+        fase_selecionada = st.selectbox(
+            "Selecione a fase",
+            ["Todas"] + fases,
+            key="filtro_fase_mata_mata"
+        )
+
+    base_jogos = palpites_mata.copy()
+
+    if fase_selecionada != "Todas":
+
+        base_jogos = base_jogos[
+            base_jogos["Fase"] == fase_selecionada
+        ]
+
+    with col_jogo:
+
+        jogos = sorted(
+            base_jogos["Jogo"].dropna().unique()
+        )
+
+        jogo_selecionado = st.selectbox(
+            "Selecione o jogo",
+            ["Todos"] + jogos,
+            key="filtro_jogo_mata_mata"
+        )
+
+    with col_participante:
+
+        participantes = sorted(
+            palpites_mata["Participante"]
+            .dropna()
+            .unique()
+        )
+
+        participante_selecionado = st.selectbox(
+            "Selecione o participante",
+            ["Todos"] + participantes,
+            key="filtro_participante_mata_mata"
+        )
+
+
+    # ======================================
+    # APLICAR FILTROS
+    # ======================================
+
+    df_mata_filtrado = palpites_mata.copy()
+
+    if fase_selecionada != "Todas":
+
+        df_mata_filtrado = df_mata_filtrado[
+            df_mata_filtrado["Fase"]
+            == fase_selecionada
+        ]
+
+    if jogo_selecionado != "Todos":
+
+        df_mata_filtrado = df_mata_filtrado[
+            df_mata_filtrado["Jogo"]
+            == jogo_selecionado
+        ]
+
+    if participante_selecionado != "Todos":
+
+        df_mata_filtrado = df_mata_filtrado[
+            df_mata_filtrado["Participante"]
+            == participante_selecionado
+        ]
+
+
+    # ======================================
+    # TABELA DO MATA-MATA
+    # ======================================
+
+    df_mata_exibicao = df_mata_filtrado[
+        [
+            "Fase",
+            "Participante",
+            "Jogo",
+            "Palpite — 90 min",
+            "Vencedor nos pênaltis",
+            "Resultado — 90 min",
+            "Vencedor real nos pênaltis",
+            "Pontos base",
+            "Bônus pênaltis",
+            "Pontos"
+        ]
+    ].copy()
+
+    df_mata_exibicao = df_mata_exibicao.sort_values(
+        by=[
+            "Fase",
+            "Jogo",
+            "Participante"
+        ]
+    )
+
+    st.dataframe(
+        df_mata_exibicao,
+        width="stretch",
+        hide_index=True
+    )
+
+    # Impede a execução da lógica antiga da fase de grupos
+    st.stop()
 # ==========================================
 # CONFIGURAÇÕES
 # ==========================================

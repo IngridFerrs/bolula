@@ -25,7 +25,7 @@ from services.google_sheets import (
 )
 
 
-FASE = "LAST_32"
+FASE = "LAST_16"
 
 
 def main():

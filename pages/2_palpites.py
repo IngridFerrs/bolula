@@ -27,6 +27,10 @@ exibir_rodape_sidebar()
 
 LIBERAR_PALPITES = True
 LIBERAR_PALPITES_MATA_MATA = True
+FASES_MATA_MATA_VISIVEIS = [
+    "LAST_32"
+    
+]
 
 st.title("📊 Palpites dos Participantes")
 
@@ -86,6 +90,20 @@ if etapa_selecionada == "Mata-mata":
         .astype(str)
         .str.strip()
     )
+    palpites_mata = palpites_mata[
+    palpites_mata["FaseCodigo"].isin(
+        FASES_MATA_MATA_VISIVEIS
+    )
+    ].copy()
+
+    if palpites_mata.empty:
+
+        st.warning(
+            "Os palpites desta fase do mata-mata ainda estão ocultos. "
+            "Eles serão liberados após o encerramento dos envios."
+        )
+
+        st.stop()
 
     # Campos para exibição
     palpites_mata["Fase"] = (

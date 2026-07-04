@@ -28,7 +28,8 @@ exibir_rodape_sidebar()
 LIBERAR_PALPITES = True
 LIBERAR_PALPITES_MATA_MATA = True
 FASES_MATA_MATA_VISIVEIS = [
-    "LAST_32"
+    "LAST_32",
+    "LAST_16"
     
 ]
 

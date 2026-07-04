@@ -146,7 +146,7 @@ else:
     # Como essa alteração ainda está apenas
     # no ambiente local, deixaremos aberto
     # para os testes.
-    ENVIO_ABERTO = True
+    ENVIO_ABERTO = False
 
     nome_fase = traduzir_stage(
         FASE_ABERTA

@@ -453,15 +453,145 @@ def buscar_jogos_rodada(rodada_desejada):
 def traduzir_stage(stage):
 
     mapa = {
-        "LAST_32": "16-avos",
-        "LAST_16": "Oitavas",
-        "QUARTER_FINALS": "Quartas",
-        "SEMI_FINALS": "Semifinal",
-        "THIRD_PLACE": "3º Lugar",
+        "LAST_32": "16-avos de final",
+        "LAST_16": "Oitavas de final",
+        "QUARTER_FINALS": "Quartas de final",
+        "SEMI_FINALS": "Semifinais",
+        "THIRD_PLACE": "Disputa do 3º lugar",
         "FINAL": "Final"
     }
 
     return mapa.get(stage, stage)
+def buscar_fase_mata_mata_atual():
+
+    headers = {
+        "X-Auth-Token": API_KEY
+    }
+
+    url = (
+        f"https://api.football-data.org/v4/"
+        f"competitions/{COMPETICAO}/matches"
+    )
+
+    try:
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=30
+        )
+
+        response.raise_for_status()
+
+    except requests.RequestException as erro:
+
+        print(
+            "\nERRO AO CONSULTAR FASE ATUAL DO MATA-MATA:\n"
+        )
+
+        print(erro)
+
+        return None
+
+    dados = response.json()
+
+    if "matches" not in dados:
+
+        print("\nERRO NA API:\n")
+        print(dados)
+
+        return None
+
+    ordem_fases = {
+        "LAST_32": 1,
+        "LAST_16": 2,
+        "QUARTER_FINALS": 3,
+        "SEMI_FINALS": 4,
+        "THIRD_PLACE": 5,
+        "FINAL": 6
+    }
+
+    fases_encontradas = {}
+
+    for jogo in dados["matches"]:
+
+        stage = str(
+            jogo.get("stage") or ""
+        ).strip().upper()
+
+        if stage not in ordem_fases:
+            continue
+
+        time_casa = (
+            jogo.get("homeTeam", {}).get("shortName")
+            or jogo.get("homeTeam", {}).get("name")
+        )
+
+        time_fora = (
+            jogo.get("awayTeam", {}).get("shortName")
+            or jogo.get("awayTeam", {}).get("name")
+        )
+
+        if not time_casa or not time_fora:
+            continue
+
+        status = str(
+            jogo.get("status") or ""
+        ).strip().upper()
+
+        if stage not in fases_encontradas:
+
+            fases_encontradas[stage] = {
+                "total": 0,
+                "finalizados": 0
+            }
+
+        fases_encontradas[stage]["total"] += 1
+
+        if status == "FINISHED":
+
+            fases_encontradas[stage]["finalizados"] += 1
+
+    if not fases_encontradas:
+
+        return None
+
+    fases_nao_finalizadas = [
+        fase
+        for fase, dados_fase in fases_encontradas.items()
+        if dados_fase["finalizados"] < dados_fase["total"]
+    ]
+
+    if fases_nao_finalizadas:
+
+        return max(
+            fases_nao_finalizadas,
+            key=lambda fase: ordem_fases[fase]
+        )
+
+    return max(
+        fases_encontradas.keys(),
+        key=lambda fase: ordem_fases[fase]
+    )
+
+
+def buscar_texto_rodada_atual():
+
+    fase_mata_mata = buscar_fase_mata_mata_atual()
+
+    if fase_mata_mata:
+
+        return traduzir_stage(
+            fase_mata_mata
+        )
+
+    rodada = buscar_rodada_atual()
+
+    if rodada is None:
+
+        return "Aguardando início"
+
+    return f"Rodada {rodada}"
 
 
 def buscar_jogos_fase(stage_desejado):

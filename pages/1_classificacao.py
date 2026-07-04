@@ -3,8 +3,7 @@ import plotly.express as px
 import streamlit as st
 from services.google_sheets import (ler_classificacao,ler_extrato)
 from utils.visual import aplicar_visual
-from services.api_copa import buscar_rodada_atual
-
+from services.api_copa import buscar_texto_rodada_atual
 # ==================================================
 # CONFIGURAÇÃO DA PÁGINA
 # ==================================================
@@ -20,7 +19,7 @@ aplicar_visual()
 
 try:
 
-    rodada_atual = buscar_rodada_atual()
+    rodada_atual = buscar_texto_rodada_atual()
 
 except Exception:
 
@@ -32,7 +31,7 @@ st.markdown(
 
 if rodada_atual is not None:    
         
-    st.info( f"🏆 Rodada atual: {rodada_atual}")
+    st.info( f"🏆 Etapa atual: {rodada_atual}")
 
 # ==================================================
 # AJUSTES VISUAIS

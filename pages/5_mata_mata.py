@@ -141,12 +141,12 @@ else:
 
     # Durante os primeiros testes, manteremos
     # o controle manual da fase.
-    FASE_ABERTA = "QUARTER_FINALS"
+    FASE_ABERTA = "SEMI_FINALS"
 
     # Como essa alteração ainda está apenas
     # no ambiente local, deixaremos aberto
     # para os testes.
-    ENVIO_ABERTO = False
+    ENVIO_ABERTO = True
 
     nome_fase = traduzir_stage(
         FASE_ABERTA
@@ -192,7 +192,7 @@ else:
         f"Quantidade de confrontos disponíveis: {len(df_fase)}"
     )
 
-    TOTAL_JOGOS_FASE = 4
+    TOTAL_JOGOS_FASE = 2
 
     if len(df_fase) < TOTAL_JOGOS_FASE:
 

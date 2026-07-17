@@ -141,7 +141,7 @@ else:
 
     # Durante os primeiros testes, manteremos
     # o controle manual da fase.
-    FASE_ABERTA = "FINAL"
+    FASE_ABERTA = "THIRD_PLACE"
 
     # Como essa alteração ainda está apenas
     # no ambiente local, deixaremos aberto

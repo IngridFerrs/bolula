@@ -32,7 +32,8 @@ FASES_MATA_MATA_VISIVEIS = [
     "LAST_16",
     "QUARTER_FINALS",
     "SEMI_FINALS",
-    "THIRD_PLACE"
+    "THIRD_PLACE",
+    "FINAL"
     
 ]
 
